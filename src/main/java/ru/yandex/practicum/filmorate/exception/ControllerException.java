@@ -6,16 +6,11 @@ import java.time.Instant;
 
 public abstract class ControllerException extends RuntimeException {
 
-    private HttpStatus responseStatus = HttpStatus.BAD_REQUEST;
+    private final HttpStatus responseStatus = HttpStatus.BAD_REQUEST;
     private final Instant timestamp = Instant.now();
 
     public ControllerException(String message) {
         super(message);
-    }
-
-    public ControllerException(String message, HttpStatus responseStatus) {
-        super(message);
-        this.responseStatus = responseStatus;
     }
 
     public HttpStatus getResponseStatus() {
