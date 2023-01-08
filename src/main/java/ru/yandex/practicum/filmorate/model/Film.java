@@ -12,6 +12,7 @@ public class Film {
     @PositiveOrZero
     private int id;
 
+    @NonNull
     @NotBlank(message = "Наименование фильма не может быть пустым")
     final String name;
 
