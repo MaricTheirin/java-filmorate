@@ -2,8 +2,12 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.UserAlreadyExistsException;
+import ru.yandex.practicum.filmorate.exception.film.FilmValidationException;
+import ru.yandex.practicum.filmorate.exception.user.UserAlreadyExistsException;
+import ru.yandex.practicum.filmorate.exception.user.UserValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+
+import javax.validation.Valid;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,37 +15,44 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/user")
-public class UserController {
+@RequestMapping("/users")
+public class UserController extends FilmorateController<User> {
 
-    private final Map<String, User> users = new HashMap<>();
+    private final Map<Integer, User> users = new HashMap<>();
 
-    @PostMapping
-    public User createUser(@RequestBody User user) {
-        log.debug("Создание нового пользователя {}", user);
-        if (users.containsKey(user.getLogin())) {
-            log.warn("Невозможно создать пользователя {} из-за конфликта логинов.", user);
-            throw new UserAlreadyExistsException("Пользователь с таким логином уже существует!");
+    @Override
+    public User create(@Valid @RequestBody User user) {
+        log.debug("Добавление нового пользователя {}", user);
+        if (user.getId() != 0) {
+            throw new UserValidationException("Ошибка: ID должен присваиваться автоматически");
         }
-        return addUser(user);
+        user.setId(users.size() + 1);
+        return save(user);
     }
 
-    @PutMapping
-    public User createOrUpdateUser(@RequestBody User user) {
-        log.debug("Создание/обновление пользователя {}", user);
-        return addUser(user);
+    @Override
+    public User update(@Valid @RequestBody User user) {
+        if (user.getId() == 0) {
+            return create(user);
+        }
+        if (users.containsKey(user.getId())) {
+            log.debug("Обновление существующего пользователя {} на {}", users.get(user.getId()), user);
+            return save(user);
+        }
+        throw new UserValidationException("Ошибка: ID должен присваиваться автоматически");
     }
 
-    @GetMapping
-    public List<User> getAllUsers() {
-        log.debug("Получение списка всех пользователей");
+    @Override
+    public List<User> getAll() {
+        log.debug("Вывод всех добавленных пользователей");
         return new ArrayList<>(users.values());
     }
 
-    private User addUser(User user) {
-        users.put(user.getLogin(), user);
+    @Override
+    protected User save(User user) {
+        users.put(user.getId(), user);
         log.info("Пользователь {} добавлен. Текущее количество пользователей: {}", user, users.size());
-        return user;
+        return users.get(user.getId());
     }
 
 }
