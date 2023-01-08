@@ -1,4 +1,6 @@
-package ru.yandex.practicum.filmorate.exception;
+package ru.yandex.practicum.filmorate.exception.user;
+
+import ru.yandex.practicum.filmorate.exception.ControllerException;
 
 public class UserAlreadyExistsException extends ControllerException {
 
