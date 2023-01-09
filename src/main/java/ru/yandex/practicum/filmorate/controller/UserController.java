@@ -2,8 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.film.FilmValidationException;
-import ru.yandex.practicum.filmorate.exception.user.UserAlreadyExistsException;
+import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -24,7 +23,7 @@ public class UserController extends FilmorateController<User> {
     public User create(@Valid @RequestBody User user) {
         log.debug("Добавление нового пользователя {}", user);
         if (user.getId() != 0) {
-            throw new UserValidationException("Ошибка: ID должен присваиваться автоматически");
+            throw new UserValidationException("ID должен присваиваться автоматически");
         }
         user.setId(users.size() + 1);
         return save(user);
@@ -39,7 +38,7 @@ public class UserController extends FilmorateController<User> {
             log.debug("Обновление существующего пользователя {} на {}", users.get(user.getId()), user);
             return save(user);
         }
-        throw new UserValidationException("Ошибка: ID должен присваиваться автоматически");
+        throw new UserNotFoundException("пользователя с указанным ID не существует, обновление невозможно");
     }
 
     @Override
