@@ -18,7 +18,7 @@ import java.util.Map;
 @RequestMapping("/users")
 public class UserController extends FilmorateController<User> {
 
-    private final Map<Integer, User> users = new HashMap<>();
+    protected final Map<Integer, User> users = new HashMap<>();
 
     @Override
     public User create(@Valid @RequestBody User user) {

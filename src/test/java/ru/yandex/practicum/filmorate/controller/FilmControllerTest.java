@@ -21,7 +21,7 @@ public class FilmControllerTest {
     }
 
     @BeforeEach
-    public void generateNewFilm() {
+    public void clearFilms() {
         controller.films.clear();
     }
 
@@ -60,11 +60,5 @@ public class FilmControllerTest {
         assertEquals(updatedFilm, savedFilm, "Обновление фильмов происходит некорректно");
         assertEquals(1, controller.films.size(), "Обновлённый фильм должен заменить существующий");
     }
-
-
-
-
-
-
 
 }

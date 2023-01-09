@@ -16,7 +16,7 @@ import java.util.Map;
 @RequestMapping("/films")
 public class FilmController extends FilmorateController<Film> {
 
-    Map<Integer, Film> films = new HashMap<>();
+    protected Map<Integer, Film> films = new HashMap<>();
     private static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
 
     @Override
