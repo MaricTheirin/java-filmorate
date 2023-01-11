@@ -3,12 +3,10 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.film.FilmValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.service.FilmService;
 import javax.validation.Valid;
-import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
@@ -16,12 +14,11 @@ import java.util.List;
 @RequestMapping("/films")
 public class FilmController extends FilmorateController<Film> {
 
-    protected FilmStorage filmStorage;
-    private static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
+    FilmService filmService;
 
     @Autowired
-    public FilmController(FilmStorage filmStorage) {
-        this.filmStorage = filmStorage;
+    public FilmController(FilmService filmService) {
+        this.filmService = filmService;
     }
 
     @Override
@@ -30,9 +27,7 @@ public class FilmController extends FilmorateController<Film> {
         if (film.getId() != 0) {
             throw new FilmValidationException("ID должен присваиваться автоматически");
         }
-        film.setId(filmStorage.getNextID());
-        validateFilm(film);
-        return filmStorage.save(film);
+        return filmService.create(film);
     }
 
     @Override
@@ -40,28 +35,13 @@ public class FilmController extends FilmorateController<Film> {
         if (film.getId() == 0) {
             return create(film);
         }
-        if (filmStorage.contains(film.getId())) {
-            log.debug("Обновление существующего фильма {} на {}", filmStorage.get(film.getId()), film);
-            return filmStorage.save(film);
-        }
-        throw new FilmNotFoundException("фильма с указанным ID не существует, обновление невозможно");
+        return filmService.update(film);
     }
 
     @Override
     public List<Film> getAll() {
         log.debug("Вывод всех добавленных фильмов");
-        return filmStorage.getAll();
-    }
-
-    private void validateFilm(Film film) {
-        log.debug("Дополнительная валидация");
-        if (film.getReleaseDate().isBefore(MIN_RELEASE_DATE)) {
-            log.warn("Валидация неуспешна: дата создания фильма не должна быть раньше {}",MIN_RELEASE_DATE);
-            throw new FilmValidationException(
-                    "информация о фильме заполнена некорректно, дата создания не должна быть раньше " + MIN_RELEASE_DATE
-            );
-        }
-        log.debug("Валидация успешна");
+        return filmService.getAll();
     }
 
 }
