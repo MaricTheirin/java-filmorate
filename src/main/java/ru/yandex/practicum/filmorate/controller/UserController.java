@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import javax.validation.Valid;
@@ -19,11 +20,11 @@ import java.util.Map;
 @RequestMapping("/users")
 public class UserController extends FilmorateController<User> {
 
-    UserStorage userStorage;
+    UserService userService;
 
     @Autowired
-    public UserController(UserStorage userStorage) {
-        this.userStorage = userStorage;
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     @Override
@@ -32,26 +33,21 @@ public class UserController extends FilmorateController<User> {
         if (user.getId() != 0) {
             throw new UserValidationException("ID должен присваиваться автоматически");
         }
-        user.setId(userStorage.getNextID());
-        return userStorage.save(user);
+        return userService.save(user);
     }
 
     @Override
     public User update(@Valid @RequestBody User user) {
         if (user.getId() == 0) {
-            return userStorage.save(user);
+            return userService.save(user);
         }
-        if (userStorage.contains(user.getId())) {
-            log.debug("Обновление существующего пользователя {} на {}", userStorage.get(user.getId()), user);
-            return userStorage.save(user);
-        }
-        throw new UserNotFoundException("пользователя с указанным ID не существует, обновление невозможно");
+        return userService.update(user);
     }
 
     @Override
     public List<User> getAll() {
         log.debug("Вывод всех добавленных пользователей");
-        return userStorage.getAll();
+        return userService.getAll();
     }
 
 }
