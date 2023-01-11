@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -60,19 +59,27 @@ public class UserService {
 
 
     public User save(User user) {
-        user.setId(userStorage.getNextID());
         return userStorage.save(user);
     }
 
     public User update(User user) {
-        if (userStorage.contains(user.getId())) {
-            log.debug("Обновление существующего пользователя {} на {}", userStorage.get(user.getId()), user);
-            return userStorage.save(user);
+        if (!userStorage.contains(user.getId())) {
+            throw new UserNotFoundException("пользователя с указанным ID не существует, обновление невозможно");
         }
-        throw new UserNotFoundException("пользователя с указанным ID не существует, обновление невозможно");
+        return userStorage.update(user);
     }
 
     public List<User> getAll() {
         return userStorage.getAll();
     }
+
+    public User get(Integer id) {
+        log.debug("Запрошен пользователь с id = {}", id);
+        if (!userStorage.contains(id)) {
+            log.warn("Запрошенный пользователь с id {} не обнаружен", id);
+            throw new UserNotFoundException("Запрошенный пользователь с id " + id + " не обнаружен");
+        }
+        return userStorage.get(id);
+    }
+
 }

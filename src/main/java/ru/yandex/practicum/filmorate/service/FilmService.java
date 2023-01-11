@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.exception.film.FilmValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
-
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -17,7 +16,6 @@ import java.util.stream.Collectors;
 @Service
 public class FilmService {
 
-    private static final int DEFAULT_TOP_LIMIT = 10;
     private static final LocalDate MIN_RELEASE_DATE = LocalDate.of(1895, 12, 28);
     FilmStorage filmStorage;
 
@@ -28,19 +26,48 @@ public class FilmService {
 
     public void like(Film film, User user) {
         Set<Integer> filmLikes = film.getUserLikes();
-        if (filmLikes.contains(user.getId())) {
-            filmLikes.remove(user.getId());
-            log.debug("Пользователь {} убрал лайк с фильма {}", user.getLogin(), film.getName());
-        } else {
+
+        if (!filmLikes.contains(user.getId())){
             filmLikes.add(user.getId());
-            log.debug("Пользователь {} поставил лайк фильму {}", user.getLogin(), film.getName());
+            log.debug(
+                    "Фильм {} получил лайк пользователя {}. Текущее количество лайков: {}",
+                    film.getName(),
+                    user.getLogin(),
+                    filmLikes.size()
+            );
+        } else {
+            log.debug("Лайк не добавлен - фильм {} уже имеет лайк пользователя {}", film.getName(), user.getLogin());
         }
     }
 
-    public Map<Film, Integer> getTopFilms(Optional<Integer> limit) {
+    public void dislike(Film film, User user) {
+        Set<Integer> filmLikes = film.getUserLikes();
 
-        return filmStorage.getAll().stream()
-                .collect(Collectors.toMap(film -> film, film -> film.getUserLikes().size()));
+        if (filmLikes.contains(user.getId())) {
+            filmLikes.remove(user.getId());
+            log.debug("С фильма {} убран лайк пользователя {}. Текущее количество лайков: {}",
+                    film.getName(),
+                    user.getLogin(),
+                    filmLikes.size()
+            );
+        } else {
+            log.debug("Лайк не снят - фильм {} не имеет лайков от пользователя {}", film.getName(), user.getLogin());
+        }
+    }
+
+    public List<Film> getTopFilms(Integer maxSize) {
+
+        List<Film> topFilms =  filmStorage.getAll().stream()
+                .sorted(getLikeComparator(true))
+                .limit(maxSize)
+                .collect(Collectors.toList());
+        log.debug(
+                "Запрошен список популярных фильмов. Результат: {}",
+                topFilms.stream()
+                        .map(film -> film.getName() + "[" + film.getUserLikes().size() + "]")
+                        .collect(Collectors.joining(";"))
+        );
+        return topFilms;
     }
 
     private void validateFilm(Film film) {
@@ -54,21 +81,47 @@ public class FilmService {
         log.debug("Валидация успешна");
     }
 
-    public Film create(Film film) {
-        film.setId(filmStorage.getNextID());
+    public Film save(Film film) {
         validateFilm(film);
         return filmStorage.save(film);
     }
 
     public Film update(Film film) {
-        if (filmStorage.contains(film.getId())) {
-            log.debug("Обновление существующего фильма {} на {}", filmStorage.get(film.getId()), film);
-            return filmStorage.save(film);
+        if (!filmStorage.contains(film.getId())) {
+            throw new FilmNotFoundException("фильма с указанным ID не существует, обновление невозможно");
         }
-        throw new FilmNotFoundException("фильма с указанным ID не существует, обновление невозможно");
+        return filmStorage.update(film);
     }
 
     public List<Film> getAll() {
+        log.debug("Запрошен список всех фильмов");
         return filmStorage.getAll();
     }
+
+    public Film get(Integer id) {
+        log.debug("Запрошен фильм с id = {}", id);
+        if (filmStorage.contains(id)) {
+            return filmStorage.get(id);
+        } else {
+            log.warn("Запрошеный фильм с id = {} не существует", id);
+            throw new FilmNotFoundException("Не найден фильм с id = " + id);
+        }
+    }
+
+    private Comparator<Film> getLikeComparator(boolean reverseOrder) {
+        int multiplier = reverseOrder ? -1 : 1;
+
+        return (f1, f2) -> {
+            int likes1 = f1.getUserLikes().size();
+            int likes2 = f2.getUserLikes().size();
+            if (likes1 < likes2) {
+                return -1 * multiplier;
+            } else if (f1 == f2) {
+                return 0;
+            } else {
+                return multiplier;
+            }
+        };
+    }
+
 }
