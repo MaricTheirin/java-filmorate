@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.storage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,16 +17,22 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film get(Integer id) {
-        return films.get(id);
+        log.debug("Запрошен фильм с id = {}", id);
+        Film film = films.get(id);
+        log.trace("Полученный фильм: {}", film);
+        return film;
     }
 
     @Override
     public List<Film> getAll() {
-        return new ArrayList<>(films.values());
+        List<Film> allFilms = new ArrayList<>(films.values());
+        log.trace("Запрошен список фильмов: {}", allFilms);
+        return allFilms;
     }
 
     @Override
     public Film save(Film film) {
+        film.setId(++nextID);
         films.put(film.getId(), film);
         log.info("Фильм {} добавлен. Текущее количество фильмов: {}", film, films.size());
         return films.get(film.getId());
@@ -35,21 +40,22 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film remove(Integer id) {
-        return films.remove(id);
+        Film film = films.remove(id);
+        log.info("Фильм {} удалён", film);
+        return film;
     }
 
     @Override
     public Film update(Film film) {
-        return save(film);
-    }
-
-    @Override
-    public int getNextID() {
-        return nextID++;
+        Film previousValue = films.put(film.getId(), film);
+        log.info("Фильм {} обновлён. Старое значение: {}. Новое значение: {}", film.getName(), previousValue, film);
+        return film;
     }
 
     @Override
     public boolean contains(Integer id) {
-        return films.containsKey(id);
+        boolean isExist = films.containsKey(id);
+        log.trace("Проверка существования фильма с id = {}, результат = {}", id, isExist);
+        return isExist;
     }
 }

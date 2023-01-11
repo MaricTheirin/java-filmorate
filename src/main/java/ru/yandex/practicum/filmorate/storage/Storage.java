@@ -6,15 +6,13 @@ public interface Storage <T> {
 
     T get(Integer id);
 
-    List<T> getAll();
-
     T save(T t);
-
-    T remove(Integer id);
 
     T update (T t);
 
-    int getNextID();
+    T remove(Integer id);
+
+    List<T> getAll();
 
     boolean contains(Integer id);
 

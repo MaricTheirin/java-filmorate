@@ -3,7 +3,6 @@ package ru.yandex.practicum.filmorate.storage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,16 +17,22 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User get(Integer id) {
-        return users.get(id);
+        log.debug("Запрошен пользователь с id = {}", id);
+        User user = users.get(id);
+        log.trace("Полученный пользователь: {}", user);
+        return user;
     }
 
     @Override
     public List<User> getAll() {
-        return new ArrayList<>(users.values());
+        List<User> allUsers = new ArrayList<>(users.values());
+        log.trace("Запрошен список пользователей: {}", allUsers);
+        return allUsers;
     }
 
     @Override
     public User save(User user) {
+        user.setId(++nextID);
         users.put(user.getId(), user);
         log.info("Пользователь {} добавлен. Текущее количество пользователей: {}", user, users.size());
         return users.get(user.getId());
@@ -35,21 +40,22 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User remove(Integer id) {
-        return users.remove(id);
+        User user = users.remove(id);
+        log.info("Пользователь {} удалён", user);
+        return user;
     }
 
     @Override
     public User update(User user) {
-        return save(user);
-    }
-
-    @Override
-    public int getNextID() {
-        return nextID++;
+        User previousValue = users.put(user.getId(), user);
+        log.info("Пользователь {} обновлён. Старое значение: {}. Новое значение: {}", user.getName(), previousValue, user);
+        return user;
     }
 
     @Override
     public boolean contains(Integer id) {
-        return users.containsKey(id);
+        boolean isExist = users.containsKey(id);
+        log.trace("Проверка существования пользователя с id = {}, результат = {}", id, isExist);
+        return isExist;
     }
 }
