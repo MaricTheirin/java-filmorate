@@ -15,6 +15,4 @@ public abstract class FilmorateController <T> {
     @GetMapping
     public abstract List<T> getAll();
 
-    protected abstract T save(T t);
-
 }
