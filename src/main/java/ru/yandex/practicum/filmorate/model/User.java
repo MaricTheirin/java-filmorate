@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
-import lombok.NonNull;
 import org.springframework.format.annotation.DateTimeFormat;
 import javax.validation.constraints.*;
 import java.time.LocalDate;
@@ -23,7 +22,6 @@ public class User {
     @Email
     final String email;
 
-    @NonNull
     @Past
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     final LocalDate birthday;

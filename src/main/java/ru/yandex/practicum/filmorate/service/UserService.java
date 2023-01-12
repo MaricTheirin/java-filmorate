@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exception.user.UserValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 import java.util.List;
@@ -22,6 +23,10 @@ public class UserService {
 
     public void addToFriends(User user1, User user2) {
         log.debug("Добавление пользователя {} в друзья пользователя {}", user1.getLogin(), user2.getLogin());
+        if (user1.equals(user2)) {
+            log.warn("Ошибка при добавлении - нельзя добавить в друзья самого себя.");
+            throw new UserValidationException("Нельзя добавить в друзья самого себя.");
+        }
         user1.getFriends().add(user2.getId());
         user2.getFriends().add(user1.getId());
         log.trace("Список друзей пользователя {}: {}", user1.getLogin(), user1.getFriends());
@@ -59,6 +64,7 @@ public class UserService {
 
 
     public User save(User user) {
+        validate(user);
         return userStorage.save(user);
     }
 
@@ -66,6 +72,7 @@ public class UserService {
         if (!userStorage.contains(user.getId())) {
             throw new UserNotFoundException("пользователя с указанным ID не существует, обновление невозможно");
         }
+        validate(user);
         return userStorage.update(user);
     }
 
@@ -80,6 +87,12 @@ public class UserService {
             throw new UserNotFoundException("Запрошенный пользователь с id " + id + " не обнаружен");
         }
         return userStorage.get(id);
+    }
+
+    private void validate (User user) {
+        if (user.getBirthday() == null) {
+            throw new UserValidationException("Не заполнено поле с днём рождения");
+        }
     }
 
 }
