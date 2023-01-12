@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.film.FilmValidationException;
+import ru.yandex.practicum.filmorate.exception.user.UserValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -72,6 +73,10 @@ public class FilmService {
 
     private void validateFilm(Film film) {
         log.debug("Дополнительная валидация");
+        if (film.getReleaseDate() == null) {
+            log.warn("Фильм {} не обработан - не указана дата релиза", film);
+            throw new UserValidationException("Не заполнено поле с датой создания фильма");
+        }
         if (film.getReleaseDate().isBefore(MIN_RELEASE_DATE)) {
             log.warn("Валидация неуспешна: дата создания фильма не должна быть раньше {}",MIN_RELEASE_DATE);
             throw new FilmValidationException(
@@ -90,6 +95,7 @@ public class FilmService {
         if (!filmStorage.contains(film.getId())) {
             throw new FilmNotFoundException("фильма с указанным ID не существует, обновление невозможно");
         }
+        validateFilm(film);
         return filmStorage.update(film);
     }
 

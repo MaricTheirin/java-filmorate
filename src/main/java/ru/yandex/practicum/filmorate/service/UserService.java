@@ -91,6 +91,7 @@ public class UserService {
 
     private void validate (User user) {
         if (user.getBirthday() == null) {
+            log.warn("Пользователь {} не обработан - не указана дата дня рождения", user);
             throw new UserValidationException("Не заполнено поле с днём рождения");
         }
     }

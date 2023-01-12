@@ -18,7 +18,6 @@ public class Film {
     @NotBlank(message = "Наименование фильма не может быть пустым")
     final String name;
 
-    @NonNull
     @Past
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     final LocalDate releaseDate;
