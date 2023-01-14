@@ -1,2 +1,16 @@
-# java-filmorate
-Template repository for Filmorate project.
+#JAVA-FILMORATE
+
+##Описание:
+Java Spring WEB приложение для хранения информации о фильмах.
+
+##Возможности:
+*Поддержка пользователей
+*Рейтинг фильмов считается на основе пользовательских лайков
+
+
+##Схема БД:
+![Database_Scheme](/filmorate_database_scheme.png)
+
+
+##Примеры SQL-запросов: 
+
