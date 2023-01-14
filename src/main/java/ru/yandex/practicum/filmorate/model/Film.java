@@ -5,6 +5,8 @@ import lombok.NonNull;
 import org.springframework.format.annotation.DateTimeFormat;
 import javax.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 public class Film {
@@ -16,7 +18,6 @@ public class Film {
     @NotBlank(message = "Наименование фильма не может быть пустым")
     final String name;
 
-    @NonNull
     @Past
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     final LocalDate releaseDate;
@@ -27,5 +28,7 @@ public class Film {
 
     @Size(max = 200, message = "Длина фильма не должна превышать 200 символов")
     final String description;
+
+    final Set<Integer> userLikes = new HashSet<>();
 
 }

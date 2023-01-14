@@ -6,15 +6,12 @@ import java.util.List;
 
 public abstract class FilmorateController <T> {
 
-    @PostMapping
     public abstract T create(@Valid @RequestBody T t);
 
-    @PutMapping
     public abstract T update(@Valid @RequestBody T t);
 
-    @GetMapping
-    public abstract List<T> getAll();
+    public abstract T getById(Integer id);
 
-    protected abstract T save(T t);
+    public abstract List<T> getAll();
 
 }
