@@ -5,7 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.mpaRating.MpaRatingNotFoundException;
-import ru.yandex.practicum.filmorate.model.MpaRating;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.MpaRatingStorage;
 
 import java.util.List;
@@ -21,13 +21,13 @@ public class MpaService {
         this.mpaRatingStorage = mpaRatingStorage;
     }
 
-    public List<MpaRating> getAll() {
-        List<MpaRating> mpaRatings =  mpaRatingStorage.getAll();
+    public List<Mpa> getAll() {
+        List<Mpa> mpaRatings =  mpaRatingStorage.getAll();
         log.debug("Запрошено получение всех жанров, получено {} значений", mpaRatings.size());
         return mpaRatings;
     }
 
-    public MpaRating getById(Integer id) {
+    public Mpa getById(Integer id) {
         log.debug("Запрошено получение MPA-рейтинга с id = {}", id);
 
         if (!mpaRatingStorage.contains(id)) {
@@ -35,7 +35,7 @@ public class MpaService {
             log.warn(errMessage);
             throw new MpaRatingNotFoundException(errMessage);
         }
-        MpaRating mpaRating = mpaRatingStorage.getById(id);
+        Mpa mpaRating = mpaRatingStorage.getById(id);
         log.debug("Получено значение {}", mpaRating);
         return mpaRating;
     }

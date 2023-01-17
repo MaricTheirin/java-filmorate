@@ -8,7 +8,6 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.MpaRating;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.sql.PreparedStatement;
@@ -16,6 +15,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -23,10 +23,14 @@ import java.util.stream.Collectors;
 public class DbFilmStorage implements FilmStorage {
 
     private final JdbcTemplate template;
+    private final DbMpaStorage dbMpaStorage;
+    private final DbGenreStorage dbGenreStorage;
 
     @Autowired
-    public DbFilmStorage(JdbcTemplate template) {
+    public DbFilmStorage(JdbcTemplate template, DbGenreStorage dbGenreStorage, DbMpaStorage dbMpaStorage) {
         this.template = template;
+        this.dbGenreStorage = dbGenreStorage;
+        this.dbMpaStorage = dbMpaStorage;
     }
 
     @Override
@@ -35,8 +39,12 @@ public class DbFilmStorage implements FilmStorage {
                 "SELECT f.id, f.name, f.release_date, f.duration, f.description, fmr.id mpaRatingId, fmr.name mpaRatingName, fl.aggLikes, fg.aggGenres " +
                 "FROM films f " +
                     "LEFT JOIN film_mpa_ratings fmr ON f.mpa_rating_id = fmr.id " +
-                    "LEFT JOIN (SELECT film_id, array_agg(user_id) aggLikes FROM film_likes GROUP BY film_id) fl on f.id = fl.film_id " +
-                    "LEFT JOIN (SELECT film_id, array_agg(genre_id||':'||name) aggGenres FROM film_genres fg LEFT JOIN genres g ON fg.genre_id = g.id GROUP BY film_id) fg on f.id = fg.film_id " +
+                    "LEFT JOIN (SELECT film_id, array_agg(user_id) aggLikes " +
+                                "FROM film_likes " +
+                                "GROUP BY film_id" +
+                    ") fl on f.id = fl.film_id " +
+                    "LEFT JOIN (SELECT film_id, array_agg(genre_id) aggGenres FROM film_genres fg " +
+                    "LEFT JOIN genres g ON fg.genre_id = g.id GROUP BY film_id) fg on f.id = fg.film_id " +
                 "WHERE f.id = ? " +
                 "GROUP BY f.id";
         return template.queryForObject(sqlGetFilmByIdQuery, this::mapRowToFilm, id);
@@ -73,7 +81,7 @@ public class DbFilmStorage implements FilmStorage {
         film.getUserLikes().forEach(likedUserId -> template.update(sqlSaveFilmLikesQuery, film.getId(), likedUserId));
         log.trace("Лайки фильма записаны");
 
-        return film;
+        return get(film.getId());
     }
 
     @Override
@@ -104,7 +112,7 @@ public class DbFilmStorage implements FilmStorage {
         film.getUserLikes().forEach(likedUserId -> template.update(sqlSaveFilmLikesQuery, film.getId(), likedUserId));
         log.trace("Лайки фильма записаны");
 
-        return film;
+        return get(film.getId());
     }
 
     @Override
@@ -123,11 +131,15 @@ public class DbFilmStorage implements FilmStorage {
     public List<Film> getAll() {
         final String sqlGetAllFilmsQuery =
                 "SELECT f.id, f.name, f.release_date, f.duration, f.description, fmr.id mpaRatingId, fmr.name mpaRatingName, fl.aggLikes, fg.aggGenres " +
-                "FROM films f " +
-                    "LEFT JOIN film_mpa_ratings fmr ON f.mpa_rating_id = fmr.id " +
-                    "LEFT JOIN (SELECT film_id, array_agg(user_id) aggLikes FROM film_likes GROUP BY film_id) fl on f.id = fl.film_id " +
-                    "LEFT JOIN (SELECT film_id, array_agg(genre_id||':'||name) aggGenres FROM film_genres fg LEFT JOIN genres g ON fg.genre_id = g.id GROUP BY film_id) fg on f.id = fg.film_id " +
-                "GROUP BY f.id";
+                        "FROM films f " +
+                        "LEFT JOIN film_mpa_ratings fmr ON f.mpa_rating_id = fmr.id " +
+                        "LEFT JOIN (SELECT film_id, array_agg(user_id) aggLikes " +
+                        "FROM film_likes " +
+                        "GROUP BY film_id" +
+                        ") fl on f.id = fl.film_id " +
+                        "LEFT JOIN (SELECT film_id, array_agg(genre_id) aggGenres FROM film_genres fg " +
+                        "LEFT JOIN genres g ON fg.genre_id = g.id GROUP BY film_id) fg on f.id = fg.film_id " +
+                        "GROUP BY f.id";
         return template.query(sqlGetAllFilmsQuery, this::mapRowToFilm);
     }
 
@@ -144,35 +156,33 @@ public class DbFilmStorage implements FilmStorage {
                 .releaseDate(LocalDate.parse(rs.getString("release_date")))
                 .duration(rs.getInt("duration"))
                 .description(rs.getString("description"))
-                .mpa(new MpaRating(rs.getInt("mpaRatingId")))
+                .mpa(dbMpaStorage.getById(rs.getInt("mpaRatingId")))
                 .userLikes(mapLikesToSet(rs.getString("aggLikes")))
                 .genres(mapGenresToSet(rs.getString("aggGenres")))
                 .build();
     }
 
     private Set<Genre> mapGenresToSet(String aggString) {
-        HashSet<Genre> set = new HashSet<>();
-        if (aggString == null || aggString.length() < 2) {
-            return set;
-        }
-        for (String elem: aggString.substring(1, aggString.length() - 1).split(", ")) {
-            int genreId = Integer.parseInt(elem.split(":")[0]);
-            String genreName = elem.split(":")[1];
-            set.add(new Genre(genreId, genreName));
-        }
-        return set;
+        return mapAggregatedValuesToSet(aggString, Integer::parseInt)
+                .stream()
+                .map(dbGenreStorage::getById)
+                .sorted(Comparator.comparing(Genre::getId))
+                .collect(Collectors.toCollection(LinkedHashSet<Genre>::new));
     }
 
     private Set<Integer> mapLikesToSet(String aggString) {
-        if (aggString == null || aggString.length() < 2 ) {
-            return new HashSet<>();
-        }
-        return Arrays.stream(aggString
-                .replaceAll("[\\[\\]\\s]", "")
-                .split(","))
-                .map(Integer::parseInt)
-                .collect(Collectors.toSet());
+        return mapAggregatedValuesToSet(aggString, Integer::parseInt);
     }
 
+    private <T> Set<T> mapAggregatedValuesToSet (String aggString, Function<String, T> function) {
+        if (aggString == null || aggString.length() < 2 ) {
+            return new LinkedHashSet<>();
+        }
+        return Arrays.stream(aggString
+                        .replaceAll("[\\[\\]\\s]", "")
+                        .split(","))
+                .map(function)
+                .collect(Collectors.toSet());
+    }
 
 }

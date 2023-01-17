@@ -30,7 +30,7 @@ public class Film {
     @Size(max = 200, message = "Длина фильма не должна превышать 200 символов")
     final String description;
 
-    MpaRating mpa;
+    Mpa mpa;
 
     Set<Genre> genres;
 

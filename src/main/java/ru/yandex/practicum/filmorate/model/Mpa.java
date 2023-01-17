@@ -3,15 +3,11 @@ package ru.yandex.practicum.filmorate.model;
 import lombok.Builder;
 
 @Builder
-public class MpaRating {
+public class Mpa {
     private int id;
     private String name;
 
-    public MpaRating(int id) {
-        this.id = id;
-    }
-
-    public MpaRating(int id, String name) {
+    public Mpa(int id, String name) {
         this.id = id;
         this.name = name;
     }

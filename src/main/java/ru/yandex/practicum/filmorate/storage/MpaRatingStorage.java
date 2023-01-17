@@ -1,15 +1,14 @@
 package ru.yandex.practicum.filmorate.storage;
 
-import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.model.MpaRating;
+import ru.yandex.practicum.filmorate.model.Mpa;
 
 import java.util.List;
 
 public interface MpaRatingStorage {
 
-    List<MpaRating> getAll();
+    List<Mpa> getAll();
 
-    MpaRating getById(Integer id);
+    Mpa getById(Integer id);
 
     boolean contains(Integer id);
 

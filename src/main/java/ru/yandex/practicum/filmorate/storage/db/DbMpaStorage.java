@@ -3,12 +3,11 @@ package ru.yandex.practicum.filmorate.storage.db;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-import ru.yandex.practicum.filmorate.model.MpaRating;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.MpaRatingStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 @Component("dbMpaRatingStorage")
@@ -22,13 +21,13 @@ public class DbMpaStorage implements MpaRatingStorage {
     }
 
     @Override
-    public List<MpaRating> getAll() {
+    public List<Mpa> getAll() {
         final String getAllMpaRatingsQuery = "SELECT id, name FROM film_mpa_ratings ORDER BY id";
         return template.query(getAllMpaRatingsQuery, this::mapRowToMpaRating);
     }
 
     @Override
-    public MpaRating getById(Integer id) {
+    public Mpa getById(Integer id) {
         final String getAllGenresQuery = "SELECT id, name FROM film_mpa_ratings WHERE id = ?";
         return template.queryForObject(getAllGenresQuery, this::mapRowToMpaRating, id);
     }
@@ -38,8 +37,8 @@ public class DbMpaStorage implements MpaRatingStorage {
         return template.queryForObject(sqlCheckMpaRatingExistsQuery, (rs, rowNum) -> rs.getBoolean("isExists"), id);
     }
 
-    private MpaRating mapRowToMpaRating (ResultSet rs, int rowNum) throws SQLException {
-        return MpaRating.builder()
+    private Mpa mapRowToMpaRating (ResultSet rs, int rowNum) throws SQLException {
+        return Mpa.builder()
                 .id(rs.getInt("id"))
                 .name(rs.getString("name"))
                 .build();
