@@ -35,7 +35,7 @@ public class GenreService {
             log.warn(errMessage);
             throw new GenreNotFoundException(errMessage);
         }
-        Genre genre = genreStorage.getById(id);
+        Genre genre = genreStorage.get(id);
         log.debug("Получено значение {}", genre);
         return genre;
     }

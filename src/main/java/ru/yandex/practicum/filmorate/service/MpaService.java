@@ -35,7 +35,7 @@ public class MpaService {
             log.warn(errMessage);
             throw new MpaRatingNotFoundException(errMessage);
         }
-        Mpa mpaRating = mpaRatingStorage.getById(id);
+        Mpa mpaRating = mpaRatingStorage.get(id);
         log.debug("Получено значение {}", mpaRating);
         return mpaRating;
     }

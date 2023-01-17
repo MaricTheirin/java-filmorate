@@ -3,6 +3,7 @@ package ru.yandex.practicum.filmorate.storage.db;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
+import ru.yandex.practicum.filmorate.exception.NotImplementedException;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.storage.MpaStorage;
 
@@ -27,7 +28,7 @@ public class DbMpaStorage implements MpaStorage {
     }
 
     @Override
-    public Mpa getById(Integer id) {
+    public Mpa get(Integer id) {
         final String getAllGenresQuery = "SELECT id, name FROM film_mpa_ratings WHERE id = ?";
         return template.queryForObject(getAllGenresQuery, this::mapRowToMpaRating, id);
     }
@@ -43,4 +44,20 @@ public class DbMpaStorage implements MpaStorage {
                 .name(rs.getString("name"))
                 .build();
     }
+
+    @Override
+    public Mpa save(Mpa mpa) {
+        throw new NotImplementedException("сохранение новых MPA на данный момент не реализовано");
+    }
+
+    @Override
+    public Mpa update(Mpa mpa) {
+        throw new NotImplementedException("обновление MPA на данный момент не реализовано");
+    }
+
+    @Override
+    public Mpa remove(Integer id) {
+        throw new NotImplementedException("удаление MPA на данный момент не реализовано");
+    }
+
 }

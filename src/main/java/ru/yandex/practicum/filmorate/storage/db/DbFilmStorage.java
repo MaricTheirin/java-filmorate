@@ -136,7 +136,7 @@ public class DbFilmStorage implements FilmStorage {
                 .releaseDate(LocalDate.parse(rs.getString("release_date")))
                 .duration(rs.getInt("duration"))
                 .description(rs.getString("description"))
-                .mpa(dbMpaStorage.getById(rs.getInt("mpaRatingId")))
+                .mpa(dbMpaStorage.get(rs.getInt("mpaRatingId")))
                 .userLikes(mapLikesToSet(rs.getString("aggLikes")))
                 .genres(mapGenresToList(rs.getString("aggGenres")))
                 .build();
@@ -145,7 +145,7 @@ public class DbFilmStorage implements FilmStorage {
     private List<Genre> mapGenresToList(String aggString) {
         return mapAggregatedValuesToSet(aggString, Integer::parseInt)
                 .stream()
-                .map(dbGenreStorage::getById)
+                .map(dbGenreStorage::get)
                 .sorted(Comparator.comparing(Genre::getId))
                 .collect(Collectors.toList());
     }
