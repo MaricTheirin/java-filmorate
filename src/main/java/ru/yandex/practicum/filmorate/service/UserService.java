@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserValidationException;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserStorage;
 import java.util.HashSet;
@@ -81,25 +82,37 @@ public class UserService {
 
 
     public User save(User user) {
+        log.debug("Запрошено сохранение пользователя {}", user);
         validate(user);
-        return userStorage.save(user);
+        User savedUser = userStorage.save(user);
+        log.debug("Пользователь {} сохранён", savedUser);
+        return savedUser;
     }
 
     public User update(User user) {
-        if (!userStorage.contains(user.getId())) {
+        log.debug("Запрос на обновление пользователя");
+        if (!isExists(user.getId())) {
             throw new UserNotFoundException("пользователя с указанным ID не существует, обновление невозможно");
         }
+        User previousUser = get(user.getId());
         validate(user);
-        return userStorage.update(user);
+        User updatedUser = userStorage.update(user);
+        log.info("Пользователь {} обновлён. Старое значение: {}. Новое значение: {}",
+                updatedUser.getName(), previousUser, updatedUser
+        );
+        return updatedUser;
     }
 
     public List<User> getAll() {
-        return userStorage.getAll();
+        log.debug("Запрошен общий список пользователей");
+        List<User> users = userStorage.getAll();
+        log.trace("Получено {} пользователей: {}", users.size(), users);
+        return users;
     }
 
     public User get(Integer id) {
         log.debug("Запрошен пользователь с id = {}", id);
-        if (!userStorage.contains(id)) {
+        if (!isExists(id)) {
             log.warn("Запрошенный пользователь с id {} не обнаружен", id);
             throw new UserNotFoundException("Запрошенный пользователь с id " + id + " не обнаружен");
         }
@@ -107,6 +120,7 @@ public class UserService {
     }
 
     private void validate (User user) {
+        log.debug("Дополнительная валидация");
         if (user.getBirthday() == null) {
             log.warn("Пользователь {} не обработан - не указана дата дня рождения", user);
             throw new UserValidationException("Не заполнено поле с днём рождения");
@@ -115,6 +129,13 @@ public class UserService {
             user.setFriends(new HashSet<>());
         }
         System.out.println();
+        log.debug("Валидация успешна");
+    }
+
+    private boolean isExists(Integer id) {
+        boolean result = userStorage.contains(id);
+        log.trace("Проверка существования пользователя с id = {}, результат = {}", id, result);
+        return result;
     }
 
     public enum FriendshipAction {ADD, DELETE}
