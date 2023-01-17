@@ -101,7 +101,7 @@ public class DbFilmStorage implements FilmStorage {
 
         film.getGenres().forEach(genre -> template.update(sqlSaveFilmGenresQuery, film.getId(), genre.getId()));
         log.trace("Жанры фильма записаны");
-        film.getGenres().forEach(likedUserId -> template.update(sqlSaveFilmLikesQuery, film.getId(), likedUserId));
+        film.getUserLikes().forEach(likedUserId -> template.update(sqlSaveFilmLikesQuery, film.getId(), likedUserId));
         log.trace("Лайки фильма записаны");
 
         return film;
