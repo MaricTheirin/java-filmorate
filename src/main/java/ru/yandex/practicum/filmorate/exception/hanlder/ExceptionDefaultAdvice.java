@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.film.FilmValidationException;
+import ru.yandex.practicum.filmorate.exception.genre.GenreNotFoundException;
+import ru.yandex.practicum.filmorate.exception.mpaRating.MpaRatingNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserValidationException;
 
@@ -21,7 +23,12 @@ public class ExceptionDefaultAdvice {
 
     private static final String DEFAULT_EXCEPTION_DESCRIPTION = "Возникла ошибка при обработке запроса: ";
 
-    @ExceptionHandler({UserNotFoundException.class, FilmNotFoundException.class})
+    @ExceptionHandler({
+            UserNotFoundException.class,
+            FilmNotFoundException.class,
+            GenreNotFoundException.class,
+            MpaRatingNotFoundException.class
+    })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Response handleNotFoundExceptions (Throwable e) {
         return new Response(DEFAULT_EXCEPTION_DESCRIPTION + e.getMessage());
