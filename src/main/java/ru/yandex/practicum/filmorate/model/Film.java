@@ -1,11 +1,12 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NonNull;
 import org.springframework.format.annotation.DateTimeFormat;
 import javax.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -15,7 +16,7 @@ public class Film {
     @PositiveOrZero
     private int id;
 
-    @NonNull
+    @NotNull
     @NotBlank(message = "Наименование фильма не может быть пустым")
     final String name;
 
@@ -23,7 +24,7 @@ public class Film {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     final LocalDate releaseDate;
 
-    @NonNull
+    @NotNull
     @Positive(message = "Продолжительность фильма должна быть больше 0")
     final int duration;
 
@@ -32,7 +33,7 @@ public class Film {
 
     Mpa mpa;
 
-    Set<Genre> genres;
+    List<Genre> genres;
 
     Set<Integer> userLikes;
 

@@ -85,7 +85,7 @@ public class FilmService {
             );
         }
         if (film.getGenres() == null) {
-            film.setGenres(new HashSet<>());
+            film.setGenres(new ArrayList<>());
         }
         if (film.getUserLikes() == null) {
             film.setUserLikes(new HashSet<>());

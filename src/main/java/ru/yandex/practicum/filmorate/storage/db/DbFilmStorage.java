@@ -35,34 +35,16 @@ public class DbFilmStorage implements FilmStorage {
 
     @Override
     public Film get(Integer id) {
-        final String sqlGetFilmByIdQuery =
-                "SELECT f.id, f.name, f.release_date, f.duration, f.description, fmr.id mpaRatingId, fmr.name mpaRatingName, fl.aggLikes, fg.aggGenres " +
-                "FROM films f " +
-                    "LEFT JOIN film_mpa_ratings fmr ON f.mpa_rating_id = fmr.id " +
-                    "LEFT JOIN (SELECT film_id, array_agg(user_id) aggLikes " +
-                                "FROM film_likes " +
-                                "GROUP BY film_id" +
-                    ") fl on f.id = fl.film_id " +
-                    "LEFT JOIN (SELECT film_id, array_agg(genre_id) aggGenres FROM film_genres fg " +
-                    "LEFT JOIN genres g ON fg.genre_id = g.id GROUP BY film_id) fg on f.id = fg.film_id " +
-                "WHERE f.id = ? " +
-                "GROUP BY f.id";
-        return template.queryForObject(sqlGetFilmByIdQuery, this::mapRowToFilm, id);
+        return template.queryForObject(SqlConstants.GET_FILM_BY_ID, this::mapRowToFilm, id);
     }
 
     @Override
     public Film save(Film film) {
-        final String sqlSaveFilmGenresQuery = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
-        final String sqlSaveFilmLikesQuery = "INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)";
-        final String sqlSaveFilmQuery =
-                "INSERT INTO films(name, release_date, duration, description, mpa_rating_id) " +
-                "VALUES (?,?,?,?,?)";
-
-
         KeyHolder holder = new GeneratedKeyHolder();
+        int savedFilmId;
 
         template.update(conn -> {
-            PreparedStatement smt = conn.prepareStatement(sqlSaveFilmQuery,new String[] {"id"});
+            PreparedStatement smt = conn.prepareStatement(SqlConstants.SAVE_FILM,new String[] {"id"});
             smt.setString(1, film.getName());
             smt.setDate(2, java.sql.Date.valueOf(film.getReleaseDate()));
             smt.setInt(3, film.getDuration());
@@ -71,34 +53,27 @@ public class DbFilmStorage implements FilmStorage {
             return smt;
         }, holder);
 
-        int resultId = holder.getKey().intValue();
-        log.debug("Фильм записан с id = {}", resultId);
-        film.setId(resultId);
-
-        film.getGenres().forEach(genre -> template.update(sqlSaveFilmGenresQuery, film.getId(), genre.getId()));
-        log.trace("Жанры фильма записаны");
-
-        film.getUserLikes().forEach(likedUserId -> template.update(sqlSaveFilmLikesQuery, film.getId(), likedUserId));
-        log.trace("Лайки фильма записаны");
+        try {
+            savedFilmId = holder.getKey().intValue();
+        } catch (NullPointerException e) {
+            log.warn("Ошибка при получении id записываемого в БД фильма {}: {}", film, e.getMessage());
+            throw e;
+        }
+        log.debug("Фильм записан с id = {}", savedFilmId);
+        film.setId(savedFilmId);
+        saveFilmGenres(film);
+        saveFilmLikes(film);
 
         return get(film.getId());
     }
 
     @Override
     public Film update(Film film) {
-        final String sqlUpdateFilmQuery =
-                "UPDATE films " +
-                "SET name = ?, release_date = ?, duration = ?, description = ?, mpa_rating_id = ? " +
-                "WHERE ID = ?";
-        final String sqlRemoveFilmGenresQuery = "DELETE FROM film_genres WHERE film_id = ?";
-        final String sqlSaveFilmGenresQuery = "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)";
-        final String sqlRemoveFilmLikesQuery = "DELETE FROM film_likes WHERE film_id = ?";
-        final String sqlSaveFilmLikesQuery = "INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)";
+        deleteFilmLikes(film.getId());
+        deleteFilmGenres(film.getId());
 
-        template.update(sqlRemoveFilmGenresQuery, film.getId());
-        template.update(sqlRemoveFilmLikesQuery, film.getId());
         template.update(
-                sqlUpdateFilmQuery,
+                SqlConstants.UPDATE_FILM_BY_ID,
                 film.getName(),
                 film.getReleaseDate(),
                 film.getDuration(),
@@ -107,46 +82,50 @@ public class DbFilmStorage implements FilmStorage {
                 film.getId()
         );
 
-        film.getGenres().forEach(genre -> template.update(sqlSaveFilmGenresQuery, film.getId(), genre.getId()));
-        log.trace("Жанры фильма записаны");
-        film.getUserLikes().forEach(likedUserId -> template.update(sqlSaveFilmLikesQuery, film.getId(), likedUserId));
-        log.trace("Лайки фильма записаны");
-
+        saveFilmGenres(film);
+        saveFilmLikes(film);
         return get(film.getId());
     }
 
     @Override
     public Film remove(Integer id) {
-        final String sqlRemoveFilmQuery = "DELETE FROM films WHERE id = ?";
-        final String sqlRemoveFilmLikesQuery = "DELETE FROM film_likes WHERE film_id = ?";
-        final String sqlRemoveFilmGenresQuery = "DELETE FROM film_genres WHERE film_id = ?";
         Film film = get(id);
-        template.update(sqlRemoveFilmQuery, id);
-        template.update(sqlRemoveFilmLikesQuery, id);
-        template.update(sqlRemoveFilmGenresQuery, id);
+        deleteFilmLikes(film.getId());
+        deleteFilmGenres(film.getId());
+        template.update(SqlConstants.DELETE_FILM_BY_ID, id);
         return film;
     }
 
     @Override
     public List<Film> getAll() {
-        final String sqlGetAllFilmsQuery =
-                "SELECT f.id, f.name, f.release_date, f.duration, f.description, fmr.id mpaRatingId, fmr.name mpaRatingName, fl.aggLikes, fg.aggGenres " +
-                        "FROM films f " +
-                        "LEFT JOIN film_mpa_ratings fmr ON f.mpa_rating_id = fmr.id " +
-                        "LEFT JOIN (SELECT film_id, array_agg(user_id) aggLikes " +
-                        "FROM film_likes " +
-                        "GROUP BY film_id" +
-                        ") fl on f.id = fl.film_id " +
-                        "LEFT JOIN (SELECT film_id, array_agg(genre_id) aggGenres FROM film_genres fg " +
-                        "LEFT JOIN genres g ON fg.genre_id = g.id GROUP BY film_id) fg on f.id = fg.film_id " +
-                        "GROUP BY f.id";
-        return template.query(sqlGetAllFilmsQuery, this::mapRowToFilm);
+        return template.query(SqlConstants.GET_FILMS_ALL, this::mapRowToFilm);
     }
 
     @Override
     public boolean contains(Integer id) {
-        final String sqlCheckFilmExistsQuery = "SELECT EXISTS(SELECT id FROM films WHERE id = ?) isExists";
-        return template.queryForObject(sqlCheckFilmExistsQuery, (rs, rowNum) -> rs.getBoolean("isExists"), id);
+        return Boolean.TRUE.equals(template.queryForObject(
+                SqlConstants.CHECK_FILM_EXISTS_BY_ID, (rs, rowNum) -> rs.getBoolean("isExists"), id
+        ));
+    }
+
+    private void saveFilmLikes(Film film) {
+        film.getUserLikes().forEach(likedUserId -> template.update(SqlConstants.SAVE_FILM_LIKES_BY_FILM_ID_USER_ID, film.getId(), likedUserId));
+        log.trace("Лайки фильма записаны");
+    }
+
+    private void saveFilmGenres(Film film) {
+        film.getGenres().forEach(genre -> template.update(SqlConstants.SAVE_FILM_GENRE_BY_FILM_ID_GENRE_ID, film.getId(), genre.getId()));
+        log.trace("Жанры фильма записаны");
+    }
+
+    private void deleteFilmLikes(Integer filmId) {
+        template.update(SqlConstants.DELETE_FILM_LIKES_BY_FILM_ID, filmId);
+        log.trace("Лайки фильма удалены");
+    }
+
+    private void deleteFilmGenres(Integer filmId) {
+        template.update(SqlConstants.DELETE_FILM_GENRES_BY_FILM_ID, filmId);
+        log.trace("Жанры фильма удалены");
     }
 
     private Film mapRowToFilm (ResultSet rs, int rowNum) throws SQLException {
@@ -158,16 +137,16 @@ public class DbFilmStorage implements FilmStorage {
                 .description(rs.getString("description"))
                 .mpa(dbMpaStorage.getById(rs.getInt("mpaRatingId")))
                 .userLikes(mapLikesToSet(rs.getString("aggLikes")))
-                .genres(mapGenresToSet(rs.getString("aggGenres")))
+                .genres(mapGenresToList(rs.getString("aggGenres")))
                 .build();
     }
 
-    private Set<Genre> mapGenresToSet(String aggString) {
+    private List<Genre> mapGenresToList(String aggString) {
         return mapAggregatedValuesToSet(aggString, Integer::parseInt)
                 .stream()
                 .map(dbGenreStorage::getById)
                 .sorted(Comparator.comparing(Genre::getId))
-                .collect(Collectors.toCollection(LinkedHashSet<Genre>::new));
+                .collect(Collectors.toList());
     }
 
     private Set<Integer> mapLikesToSet(String aggString) {
@@ -178,9 +157,7 @@ public class DbFilmStorage implements FilmStorage {
         if (aggString == null || aggString.length() < 2 ) {
             return new LinkedHashSet<>();
         }
-        return Arrays.stream(aggString
-                        .replaceAll("[\\[\\]\\s]", "")
-                        .split(","))
+        return Arrays.stream(aggString.replaceAll("[\\[\\]\\s]", "").split(","))
                 .map(function)
                 .collect(Collectors.toSet());
     }
