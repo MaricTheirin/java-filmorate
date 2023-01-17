@@ -23,37 +23,38 @@ public class UserService {
         this.userStorage = userStorage;
     }
 
-    public void addToFriends(Integer id1, Integer id2) {
-        User user1 = userStorage.get(id1);
-        User user2 = userStorage.get(id2);
-
-        log.debug("Добавление пользователя {} в друзья пользователя {}", user1.getLogin(), user2.getLogin());
+    private void switchFriendship(Integer id1, Integer id2, FriendshipAction action) {
+        log.debug("Обработка запроса дружбы пользователя с id = {} по отношению к пользователю с id = {}", id1, id2);
         if (id1.equals(id2)) {
             log.warn("Ошибка при добавлении - нельзя добавить в друзья самого себя.");
             throw new UserValidationException("Нельзя добавить в друзья самого себя.");
         }
-        user1.getFriends().add(id2);
-        user2.getFriends().add(id1);
+        if (!userStorage.contains(id1) || !userStorage.contains(id2)) {
+            String message = "Пользователь с таким id не существует";
+            log.warn(message);
+            throw new UserNotFoundException(message);
+        }
 
+        User user1 = userStorage.get(id1);
+        User user2 = userStorage.get(id2);
+        if (action == FriendshipAction.DELETE) {
+            log.debug("Удаляем из друзей пользователя с id = {} пользователя с id = {}", id1, id2);
+            user1.getFriends().remove(id2);
+        } else {
+            log.debug("Добавляем в друзья пользователя с id = {} пользователя с id = {}", id1, id2);
+            user1.getFriends().add(id2);
+        }
         userStorage.update(user1);
-        userStorage.update(user2);
-
         log.trace("Список друзей пользователя {}: {}", user1.getLogin(), user1.getFriends());
         log.trace("Список друзей пользователя {}: {}", user2.getLogin(), user2.getFriends());
     }
 
+    public void addToFriends(Integer id1, Integer id2) {
+        switchFriendship(id1, id2, FriendshipAction.ADD);
+    }
+
     public void deleteFromFriends(Integer id1, Integer id2) {
-        User user1 = userStorage.get(id1);
-        User user2 = userStorage.get(id2);
-
-        log.debug("Удаление из друзей {} пользователя {}", user1.getLogin(), user2.getLogin());
-        user1.getFriends().remove(user2.getId());
-        user2.getFriends().remove(user1.getId());
-        userStorage.update(user1);
-        userStorage.update(user2);
-
-        log.trace("Список друзей пользователя {}: {}", user1.getLogin(), user1.getFriends());
-        log.trace("Список друзей пользователя {}: {}", user2.getLogin(), user2.getFriends());
+        switchFriendship(id1, id2, FriendshipAction.DELETE);
     }
 
     public List<User> getFriends(Integer id) {
@@ -115,5 +116,7 @@ public class UserService {
         }
         System.out.println();
     }
+
+    public enum FriendshipAction {ADD, DELETE}
 
 }
