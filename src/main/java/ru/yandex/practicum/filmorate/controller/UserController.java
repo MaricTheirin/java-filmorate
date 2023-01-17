@@ -42,7 +42,7 @@ public class UserController extends FilmorateController<User> {
 
     @PutMapping("/{id}/friends/{friendId}")
     public void addToFriends(@PathVariable Integer id, @PathVariable Integer friendId) {
-        userService.addToFriends(userService.get(id), userService.get(friendId));
+        userService.addToFriends(id, friendId);
     }
 
     @Override
@@ -60,7 +60,7 @@ public class UserController extends FilmorateController<User> {
 
     @GetMapping("/{id}/friends")
     public List<User> getFriends(@PathVariable Integer id) {
-        return userService.getFriends(userService.get(id));
+        return userService.getFriends(id);
     }
 
     @GetMapping("/{id}/friends/common/{otherId}")
@@ -70,7 +70,7 @@ public class UserController extends FilmorateController<User> {
 
     @DeleteMapping("/{id}/friends/{friendId}")
     public void deleteFromFriends(@PathVariable Integer id, @PathVariable Integer friendId) {
-        userService.deleteFromFriends(userService.get(id), userService.get(friendId));
+        userService.deleteFromFriends(id, friendId);
     }
 
 }

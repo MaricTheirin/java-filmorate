@@ -71,4 +71,9 @@ public class FilmController extends FilmorateController<Film> {
         filmService.dislike(filmService.get(id), userService.get(userId));
     }
 
+    @DeleteMapping("{id}")
+    public Film delete(@PathVariable Integer id) {
+        return filmService.remove(id);
+    }
+
 }

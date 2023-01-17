@@ -1,14 +1,15 @@
 package ru.yandex.practicum.filmorate.model;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.NonNull;
 import org.springframework.format.annotation.DateTimeFormat;
 import javax.validation.constraints.*;
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.Set;
 
 @Data
+@Builder
 public class Film {
 
     @PositiveOrZero
@@ -29,6 +30,10 @@ public class Film {
     @Size(max = 200, message = "Длина фильма не должна превышать 200 символов")
     final String description;
 
-    final Set<Integer> userLikes = new HashSet<>();
+    MpaRating mpa;
+
+    Set<Genre> genres;
+
+    Set<Integer> userLikes;
 
 }

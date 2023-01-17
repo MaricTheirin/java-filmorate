@@ -1,15 +1,16 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.memory;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
-@Component
+@Component("inMemoryFilmStorage")
 public class InMemoryFilmStorage implements FilmStorage {
 
     protected Map<Integer, Film> films = new HashMap<>();
@@ -25,9 +26,7 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public List<Film> getAll() {
-        List<Film> allFilms = new ArrayList<>(films.values());
-        log.trace("Запрошен список фильмов: {}", allFilms);
-        return allFilms;
+        return new ArrayList<>(films.values());
     }
 
     @Override
@@ -40,9 +39,7 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film remove(Integer id) {
-        Film film = films.remove(id);
-        log.info("Фильм {} удалён", film);
-        return film;
+        return films.remove(id);
     }
 
     @Override
@@ -54,8 +51,6 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public boolean contains(Integer id) {
-        boolean isExist = films.containsKey(id);
-        log.trace("Проверка существования фильма с id = {}, результат = {}", id, isExist);
-        return isExist;
+        return films.containsKey(id);
     }
 }
