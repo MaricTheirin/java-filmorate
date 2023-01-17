@@ -15,7 +15,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static ru.yandex.practicum.filmorate.util.AggregationUtil.mapAggregatedValuesToSet;

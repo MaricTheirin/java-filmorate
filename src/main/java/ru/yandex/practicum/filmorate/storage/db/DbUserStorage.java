@@ -14,7 +14,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
+import static ru.yandex.practicum.filmorate.util.AggregationUtil.mapAggregatedValuesToSet;
 
 @Slf4j
 @Component("dbUserStorage")
@@ -35,6 +35,7 @@ public class DbUserStorage implements UserStorage {
     @Override
     public User save(User user) {
         KeyHolder holder = new GeneratedKeyHolder();
+        int savedUserId;
 
         template.update(conn -> {
             PreparedStatement smt = conn.prepareStatement(SqlConstants.SAVE_USER,new String[] {"id"});
@@ -45,9 +46,14 @@ public class DbUserStorage implements UserStorage {
             return smt;
         }, holder);
 
-        int resultId = holder.getKey().intValue();
-        log.debug("Пользователь записан с id = {}", resultId);
-        user.setId(resultId);
+        try {
+            savedUserId = holder.getKey().intValue();
+        } catch (NullPointerException e) {
+            log.warn("Ошибка при получении id записываемого в БД пользователя {}: {}", user, e.getMessage());
+            throw e;
+        }
+        log.debug("Пользователь записан с id = {}", savedUserId);
+        user.setId(savedUserId);
 
         user.getFriends().forEach(userFriendId -> template.update(
                 SqlConstants.SAVE_USER_FRIENDS_BY_USER_ID_FRIEND_ID, user.getId(), userFriendId)
@@ -105,22 +111,9 @@ public class DbUserStorage implements UserStorage {
                 .name(rs.getString("name"))
                 .email(rs.getString("email"))
                 .birthday(LocalDate.parse(rs.getString("birthday")))
-                .friends(mapFriendsToSet(rs.getString("aggFriends")))
+                .friends(mapAggregatedValuesToSet(rs.getString("aggFriends"),Integer::parseInt))
                 .build();
+
     }
 
-    //:todo сделать общий метод
-    private Set<Integer> mapFriendsToSet(String aggString) {
-        if (aggString == null) {
-            return new HashSet<>();
-        }
-        if (aggString.length() < 2) {
-            return new HashSet<>();
-        }
-        return Arrays.stream(aggString
-                        .replaceAll("[\\[\\]\\s]", "")
-                        .split(","))
-                .map(Integer::parseInt)
-                .collect(Collectors.toSet());
-    }
 }
