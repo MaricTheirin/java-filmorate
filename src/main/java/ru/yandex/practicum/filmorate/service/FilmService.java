@@ -94,16 +94,26 @@ public class FilmService {
     }
 
     public Film save(Film film) {
+        log.debug("Запрошено сохранение фильма {}", film);
         validateFilm(film);
-        return filmStorage.save(film);
+        Film savedFilm = filmStorage.save(film);
+        log.debug("Фильм {} сохранён", savedFilm);
+        return savedFilm;
     }
 
     public Film update(Film film) {
+        log.debug("Запрос на обновление фильма");
+
         if (!filmStorage.contains(film.getId())) {
             throw new FilmNotFoundException("фильма с указанным ID не существует, обновление невозможно");
         }
+        Film previousFilm = get(film.getId());
         validateFilm(film);
-        return filmStorage.update(film);
+        Film updatedFilm = filmStorage.update(film);
+        log.info("Фильм {} обновлён. Старое значение: {}. Новое значение: {}",
+                updatedFilm.getName(), previousFilm, updatedFilm
+        );
+        return updatedFilm;
     }
 
     public List<Film> getAll() {
@@ -116,7 +126,9 @@ public class FilmService {
     public Film get(Integer id) {
         log.debug("Запрошен фильм с id = {}", id);
         if (isExists(id)) {
-            return filmStorage.get(id);
+            Film requestedFilm = filmStorage.get(id);
+            log.trace("Полученный фильм: {}", requestedFilm);
+            return requestedFilm;
         } else {
             log.warn("Запрошеный фильм с id = {} не существует", id);
             throw new FilmNotFoundException("Не найден фильм с id = " + id);

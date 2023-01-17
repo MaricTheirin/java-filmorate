@@ -18,10 +18,7 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film get(Integer id) {
-        log.debug("Запрошен фильм с id = {}", id);
-        Film film = films.get(id);
-        log.trace("Полученный фильм: {}", film);
-        return film;
+        return films.get(id);
     }
 
     @Override
@@ -33,7 +30,6 @@ public class InMemoryFilmStorage implements FilmStorage {
     public Film save(Film film) {
         film.setId(++nextID);
         films.put(film.getId(), film);
-        log.info("Фильм {} добавлен. Текущее количество фильмов: {}", film, films.size());
         return films.get(film.getId());
     }
 
@@ -44,9 +40,7 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film update(Film film) {
-        Film previousValue = films.put(film.getId(), film);
-        log.info("Фильм {} обновлён. Старое значение: {}. Новое значение: {}", film.getName(), previousValue, film);
-        return film;
+        return films.put(film.getId(), film);
     }
 
     @Override
