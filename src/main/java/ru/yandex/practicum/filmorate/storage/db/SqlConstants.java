@@ -6,7 +6,8 @@ public class SqlConstants {
     }
 
     private static final String FILMS_BASE =
-            "SELECT f.id, f.name, f.release_date, f.duration, f.description, fmr.id mpaRatingId, fmr.name mpaRatingName, fl.aggLikes, fg.aggGenres " +
+            "SELECT f.id, f.name, f.release_date, f.duration, f.description, " +
+                    "fmr.id mpaRatingId, fmr.name mpaRatingName, fl.aggLikes, fg.aggGenres " +
             "FROM films f " +
             "LEFT JOIN film_mpa_ratings fmr ON f.mpa_rating_id = fmr.id " +
             "LEFT JOIN (" +
@@ -41,5 +42,35 @@ public class SqlConstants {
             "INSERT INTO film_likes (film_id, user_id) VALUES (?, ?)";
     public static final String DELETE_FILM_LIKES_BY_FILM_ID = "DELETE FROM film_likes WHERE film_id = ?";
 
+    private static final String USERS_BASE =
+            "SELECT id, login, name, email, birthday, uf.aggFriends " +
+            "FROM users u " +
+            "LEFT JOIN (" +
+                    "SELECT user_id, array_agg(friend_id) aggFriends " +
+                    "FROM user_friends GROUP BY user_id" +
+            ") uf ON u.id = uf.user_id ";
+
+    public static final String GET_USERS_ALL = USERS_BASE;
+
+    public static final String GET_USER_BY_ID = USERS_BASE + "WHERE id = ?";
+
+    public static final String SAVE_USER_FRIENDS_BY_USER_ID_FRIEND_ID =
+            "INSERT INTO user_friends (user_id, friend_id) VALUES (?, ?)";
+
+    public static final String SAVE_USER = "INSERT INTO users (login, name, email, birthday) VALUES (?, ?, ?, ?)";
+
+    public static final String UPDATE_USER_BY_ID = "UPDATE users " +
+            "SET login = ?, name = ?, email = ?, birthday = ? " +
+            "WHERE ID = ?";
+
+    public static final String DELETE_USER_BY_ID = "DELETE FROM users WHERE id = ?";
+
+    public static final String DELETE_USER_LIKES_BY_USER_ID = "DELETE FROM film_likes WHERE user_id = ?";
+
+    public static final String DELETE_USER_FRIENDS_BY_USER_ID =
+            "DELETE FROM user_friends WHERE user_id = ?";
+
+    public static final String DELETE_USER_FROM_FRIENDS_TABLE_BY_USER_ID_USER_ID =
+            "DELETE FROM user_friends WHERE user_id = ? OR friend_id = ?";
 
 }

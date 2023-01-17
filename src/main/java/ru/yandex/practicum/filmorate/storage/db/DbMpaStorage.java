@@ -4,14 +4,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.storage.MpaRatingStorage;
+import ru.yandex.practicum.filmorate.storage.MpaStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
 @Component("dbMpaRatingStorage")
-public class DbMpaStorage implements MpaRatingStorage {
+public class DbMpaStorage implements MpaStorage {
 
     private final JdbcTemplate template;
 
@@ -34,7 +34,7 @@ public class DbMpaStorage implements MpaRatingStorage {
 
     public boolean contains(Integer id) {
         final String sqlCheckMpaRatingExistsQuery = "SELECT EXISTS(SELECT id FROM film_mpa_ratings WHERE id = ?) isExists";
-        return template.queryForObject(sqlCheckMpaRatingExistsQuery, (rs, rowNum) -> rs.getBoolean("isExists"), id);
+        return Boolean.TRUE.equals(template.queryForObject(sqlCheckMpaRatingExistsQuery, (rs, rowNum) -> rs.getBoolean("isExists"), id));
     }
 
     private Mpa mapRowToMpaRating (ResultSet rs, int rowNum) throws SQLException {

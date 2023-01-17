@@ -18,6 +18,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static ru.yandex.practicum.filmorate.util.AggregationUtil.mapAggregatedValuesToSet;
+
 @Slf4j
 @Component("dbFilmStorage")
 public class DbFilmStorage implements FilmStorage {
@@ -153,13 +155,6 @@ public class DbFilmStorage implements FilmStorage {
         return mapAggregatedValuesToSet(aggString, Integer::parseInt);
     }
 
-    private <T> Set<T> mapAggregatedValuesToSet (String aggString, Function<String, T> function) {
-        if (aggString == null || aggString.length() < 2 ) {
-            return new LinkedHashSet<>();
-        }
-        return Arrays.stream(aggString.replaceAll("[\\[\\]\\s]", "").split(","))
-                .map(function)
-                .collect(Collectors.toSet());
-    }
+
 
 }

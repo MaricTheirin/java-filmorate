@@ -29,30 +29,15 @@ public class DbUserStorage implements UserStorage {
 
     @Override
     public User get(Integer id) {
-        final String sqlGetUserById =
-                "SELECT id, login, name, email, birthday, uf.aggFriends " +
-                "FROM users u " +
-                    "LEFT JOIN " +
-                        "(SELECT user_id, array_agg(friend_id) aggFriends FROM user_friends GROUP BY user_id) uf " +
-                    "ON u.id = uf.user_id " +
-                "WHERE id =  ?";
-
-        return template.queryForObject(sqlGetUserById, this::mapRowToUser, id);
+        return template.queryForObject(SqlConstants.GET_USER_BY_ID, this::mapRowToUser, id);
     }
 
     @Override
     public User save(User user) {
-        final String sqlSaveUserFriendsQuery =
-                "INSERT INTO user_friends (user_id, friend_id) " +
-                "VALUES (?, ?)";
-        final String sqlSaveUserQuery =
-                "INSERT INTO users (login, name, email, birthday) " +
-                "VALUES (?, ?, ?, ?)";
-
         KeyHolder holder = new GeneratedKeyHolder();
 
         template.update(conn -> {
-            PreparedStatement smt = conn.prepareStatement(sqlSaveUserQuery,new String[] {"id"});
+            PreparedStatement smt = conn.prepareStatement(SqlConstants.SAVE_USER,new String[] {"id"});
             smt.setString(1, user.getLogin());
             smt.setString(2, user.getName());
             smt.setString(3, user.getEmail());
@@ -64,7 +49,9 @@ public class DbUserStorage implements UserStorage {
         log.debug("Пользователь записан с id = {}", resultId);
         user.setId(resultId);
 
-        user.getFriends().forEach(userFriendId -> template.update(sqlSaveUserFriendsQuery, user.getId(), userFriendId));
+        user.getFriends().forEach(userFriendId -> template.update(
+                SqlConstants.SAVE_USER_FRIENDS_BY_USER_ID_FRIEND_ID, user.getId(), userFriendId)
+        );
         log.trace("Друзья пользователя записаны");
 
         return user;
@@ -72,15 +59,9 @@ public class DbUserStorage implements UserStorage {
 
     @Override
     public User update(User user) {
-        final String sqlUpdateUserQuery =
-                "UPDATE users " +
-                    "SET login = ?, name = ?, email = ?, birthday = ? " +
-                "WHERE ID = ?";
-        final String sqlRemoveUserFriendsQuery = "DELETE FROM user_friends WHERE user_id = ?";
-        final String sqlSaveUserFriendsQuery = "INSERT INTO user_friends (user_id, friend_id) VALUES (?, ?)";
 
         template.update(
-                sqlUpdateUserQuery,
+                SqlConstants.UPDATE_USER_BY_ID,
                 user.getLogin(),
                 user.getName(),
                 user.getEmail(),
@@ -88,8 +69,10 @@ public class DbUserStorage implements UserStorage {
                 user.getId()
         );
 
-        template.update(sqlRemoveUserFriendsQuery, user.getId());
-        user.getFriends().forEach(friendId -> template.update(sqlSaveUserFriendsQuery, user.getId(), friendId));
+        template.update(SqlConstants.DELETE_USER_FRIENDS_BY_USER_ID, user.getId());
+        user.getFriends().forEach(
+                friendId -> template.update(SqlConstants.SAVE_USER_FRIENDS_BY_USER_ID_FRIEND_ID, user.getId(), friendId)
+        );
         log.trace("Друзья пользователя записаны");
 
         return user;
@@ -98,30 +81,21 @@ public class DbUserStorage implements UserStorage {
     @Override
     public User remove(Integer id) {
         User user = get(id);
-        final String sqlDeleteUserQuery = "DELETE FROM users WHERE id = ?";
-        final String sqlDeleteUserLikesQuery = "DELETE FROM film_likes WHERE user_id = ?";
-        final String sqlDeleteUserFriendsQuery = "DELETE FROM user_friends WHERE user_id = ? OR friend_id = ?";
-        template.update(sqlDeleteUserQuery, id);
-        template.update(sqlDeleteUserLikesQuery, id);
-        template.update(sqlDeleteUserFriendsQuery, id, id);
+        template.update(SqlConstants.DELETE_USER_BY_ID, id);
+        template.update(SqlConstants.DELETE_USER_LIKES_BY_USER_ID, id);
+        template.update(SqlConstants.DELETE_USER_FROM_FRIENDS_TABLE_BY_USER_ID_USER_ID, id, id);
         return user;
     }
 
     @Override
     public List<User> getAll() {
-        final String sqlGetAllUsersQuery =
-                "SELECT id, login, name, email, birthday, uf.aggFriends " +
-                        "FROM users u " +
-                        "LEFT JOIN " +
-                        "(SELECT user_id, array_agg(friend_id) aggFriends FROM user_friends GROUP BY user_id) uf " +
-                        "ON u.id = uf.user_id ";
-        return template.query(sqlGetAllUsersQuery, this::mapRowToUser);
+        return template.query(SqlConstants.GET_USERS_ALL, this::mapRowToUser);
     }
 
     @Override
     public boolean contains(Integer id) {
         final String sqlCheckUserExistsQuery = "SELECT EXISTS(SELECT id FROM users WHERE id = ?) isExists";
-        return template.queryForObject(sqlCheckUserExistsQuery, (rs, rowNum) -> rs.getBoolean("isExists"), id);
+        return Boolean.TRUE.equals(template.queryForObject(sqlCheckUserExistsQuery, (rs, rowNum) -> rs.getBoolean("isExists"), id));
     }
 
     private User mapRowToUser (ResultSet rs, int rowNum) throws SQLException {

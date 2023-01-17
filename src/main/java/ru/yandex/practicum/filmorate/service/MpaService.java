@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.mpaRating.MpaRatingNotFoundException;
 import ru.yandex.practicum.filmorate.model.Mpa;
-import ru.yandex.practicum.filmorate.storage.MpaRatingStorage;
+import ru.yandex.practicum.filmorate.storage.MpaStorage;
 
 import java.util.List;
 
@@ -14,10 +14,10 @@ import java.util.List;
 @Service
 public class MpaService {
 
-    MpaRatingStorage mpaRatingStorage;
+    MpaStorage mpaRatingStorage;
 
     @Autowired
-    public MpaService(@Qualifier("dbMpaRatingStorage") MpaRatingStorage mpaRatingStorage) {
+    public MpaService(@Qualifier("dbMpaRatingStorage") MpaStorage mpaRatingStorage) {
         this.mpaRatingStorage = mpaRatingStorage;
     }
 
