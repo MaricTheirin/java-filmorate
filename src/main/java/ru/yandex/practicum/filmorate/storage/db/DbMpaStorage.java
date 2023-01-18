@@ -47,17 +47,17 @@ public class DbMpaStorage implements MpaStorage {
 
     @Override
     public Mpa save(Mpa mpa) {
-        throw new NotImplementedException("сохранение новых MPA на данный момент не реализовано");
+        throw new NotImplementedException("не реализовано");
     }
 
     @Override
     public Mpa update(Mpa mpa) {
-        throw new NotImplementedException("обновление MPA на данный момент не реализовано");
+        throw new NotImplementedException("не реализовано");
     }
 
     @Override
     public Mpa remove(Integer id) {
-        throw new NotImplementedException("удаление MPA на данный момент не реализовано");
+        throw new NotImplementedException("не реализовано");
     }
 
 }

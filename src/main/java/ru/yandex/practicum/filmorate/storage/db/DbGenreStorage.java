@@ -47,17 +47,17 @@ public class DbGenreStorage implements GenreStorage {
 
     @Override
     public Genre save(Genre genre) {
-        throw new NotImplementedException("сохранение новых жанров на данный момент не реализовано");
+        throw new NotImplementedException("не реализовано");
     }
 
     @Override
     public Genre update(Genre genre) {
-        throw new NotImplementedException("обновление жанров на данный момент не реализовано");
+        throw new NotImplementedException("не реализовано");
     }
 
     @Override
     public Genre remove(Integer id) {
-        throw new NotImplementedException("удаление жанров на данный момент не реализовано");
+        throw new NotImplementedException("не реализовано");
     }
 
 }
