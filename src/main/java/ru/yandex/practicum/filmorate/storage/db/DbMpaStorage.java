@@ -11,7 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-@Component("dbMpaRatingStorage")
+@Component("dbMpaStorage")
 public class DbMpaStorage implements MpaStorage {
 
     private final JdbcTemplate template;
