@@ -73,4 +73,21 @@ public class SqlConstants {
     public static final String DELETE_USER_FROM_FRIENDS_TABLE_BY_USER_ID_USER_ID =
             "DELETE FROM user_friends WHERE user_id = ? OR friend_id = ?";
 
+    private static final String GET_GENRES_BASE = "SELECT id, name FROM genres ";
+
+    public static final String GET_GENRES_ALL = GET_GENRES_BASE + " ORDER BY id";
+
+    public static final String GET_GENRE_BY_ID = GET_GENRES_BASE + " WHERE id = ?";
+
+    public static final String CHECK_GENRE_EXISTS_BY_ID = "SELECT EXISTS(SELECT id FROM genres WHERE id = ?) isExists";
+
+    private static final String GET_FILM_MPA_RATINGS_BASE = "SELECT id, name FROM film_mpa_ratings ";
+
+    public static final String GET_FILM_MPA_RATINGS_ALL = GET_FILM_MPA_RATINGS_BASE + "ORDER BY id";
+
+    public static final String GET_FILM_MPA_RATING_BY_ID = GET_FILM_MPA_RATINGS_BASE + "WHERE id = ?";
+
+    public static final String CHECK_FILM_MPA_RATING_EXISTS_BY_ID =
+            "SELECT EXISTS(SELECT id FROM film_mpa_ratings WHERE id = ?) isExists";
+
 }

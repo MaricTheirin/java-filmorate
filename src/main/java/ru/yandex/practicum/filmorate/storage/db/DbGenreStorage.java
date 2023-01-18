@@ -23,19 +23,18 @@ public class DbGenreStorage implements GenreStorage {
 
     @Override
     public List<Genre> getAll() {
-        final String getAllGenresQuery = "SELECT id, name FROM genres ORDER BY id";
-        return template.query(getAllGenresQuery, this::mapRowToGenre);
+        return template.query(SqlConstants.GET_GENRES_ALL, this::mapRowToGenre);
     }
 
     @Override
     public Genre get(Integer id) {
-        final String getAllGenresQuery = "SELECT id, name FROM genres WHERE id = ?";
-        return template.queryForObject(getAllGenresQuery, this::mapRowToGenre, id);
+        return template.queryForObject(SqlConstants.GET_GENRE_BY_ID, this::mapRowToGenre, id);
     }
 
     public boolean contains(Integer id) {
-        final String sqlCheckGenreExistsQuery = "SELECT EXISTS(SELECT id FROM genres WHERE id = ?) isExists";
-        return Boolean.TRUE.equals(template.queryForObject(sqlCheckGenreExistsQuery, (rs, rowNum) -> rs.getBoolean("isExists"), id));
+        return Boolean.TRUE.equals(template.queryForObject(
+                SqlConstants.CHECK_GENRE_EXISTS_BY_ID, (rs, rowNum) -> rs.getBoolean("isExists"), id)
+        );
     }
 
     private Genre mapRowToGenre (ResultSet rs, int rowNum) throws SQLException {

@@ -23,19 +23,18 @@ public class DbMpaStorage implements MpaStorage {
 
     @Override
     public List<Mpa> getAll() {
-        final String getAllMpaRatingsQuery = "SELECT id, name FROM film_mpa_ratings ORDER BY id";
-        return template.query(getAllMpaRatingsQuery, this::mapRowToMpaRating);
+        return template.query(SqlConstants.GET_FILM_MPA_RATINGS_ALL, this::mapRowToMpaRating);
     }
 
     @Override
     public Mpa get(Integer id) {
-        final String getAllGenresQuery = "SELECT id, name FROM film_mpa_ratings WHERE id = ?";
-        return template.queryForObject(getAllGenresQuery, this::mapRowToMpaRating, id);
+        return template.queryForObject(SqlConstants.GET_FILM_MPA_RATING_BY_ID, this::mapRowToMpaRating, id);
     }
 
     public boolean contains(Integer id) {
-        final String sqlCheckMpaRatingExistsQuery = "SELECT EXISTS(SELECT id FROM film_mpa_ratings WHERE id = ?) isExists";
-        return Boolean.TRUE.equals(template.queryForObject(sqlCheckMpaRatingExistsQuery, (rs, rowNum) -> rs.getBoolean("isExists"), id));
+        return Boolean.TRUE.equals(template.queryForObject(
+                SqlConstants.CHECK_FILM_MPA_RATING_EXISTS_BY_ID, (rs, rowNum) -> rs.getBoolean("isExists"), id)
+        );
     }
 
     private Mpa mapRowToMpaRating (ResultSet rs, int rowNum) throws SQLException {
