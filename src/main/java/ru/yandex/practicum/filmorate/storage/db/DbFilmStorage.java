@@ -109,11 +109,6 @@ public class DbFilmStorage implements FilmStorage {
         ));
     }
 
-    private void saveFilmLikes(Film film) {
-        film.getUserLikes().forEach(likedUserId -> template.update(SqlConstants.SAVE_FILM_LIKES_BY_FILM_ID_USER_ID, film.getId(), likedUserId));
-        log.trace("Лайки фильма записаны");
-    }
-
     private void saveFilmGenres(Film film) {
         film.getGenres().forEach(genre -> template.update(SqlConstants.SAVE_FILM_GENRE_BY_FILM_ID_GENRE_ID, film.getId(), genre.getId()));
         log.trace("Жанры фильма записаны");
@@ -154,6 +149,18 @@ public class DbFilmStorage implements FilmStorage {
         return mapAggregatedValuesToSet(aggString, Integer::parseInt);
     }
 
-
+    private void saveFilmLikes (Film film) {
+        Set<Integer> likes = film.getUserLikes();
+        template.batchUpdate(
+                SqlConstants.SAVE_FILM_LIKES_BY_FILM_ID_USER_ID,
+                likes,
+                likes.size(),
+                (PreparedStatement ps, Integer likedUserid) -> {
+                    ps.setInt(1, film.getId());
+                    ps.setInt(2, likedUserid);
+                }
+        );
+        log.trace("Лайки фильма записаны");
+    }
 
 }
