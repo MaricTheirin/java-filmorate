@@ -109,11 +109,6 @@ public class DbFilmStorage implements FilmStorage {
         ));
     }
 
-    private void saveFilmGenres(Film film) {
-        film.getGenres().forEach(genre -> template.update(SqlConstants.SAVE_FILM_GENRE_BY_FILM_ID_GENRE_ID, film.getId(), genre.getId()));
-        log.trace("Жанры фильма записаны");
-    }
-
     private void deleteFilmLikes(Integer filmId) {
         template.update(SqlConstants.DELETE_FILM_LIKES_BY_FILM_ID, filmId);
         log.trace("Лайки фильма удалены");
@@ -161,6 +156,20 @@ public class DbFilmStorage implements FilmStorage {
                 }
         );
         log.trace("Лайки фильма записаны");
+    }
+
+    private void saveFilmGenres(Film film) {
+        List<Genre> genres = film.getGenres();
+        template.batchUpdate(
+                SqlConstants.SAVE_FILM_GENRE_BY_FILM_ID_GENRE_ID,
+                genres,
+                genres.size(),
+                (PreparedStatement ps, Genre genre) -> {
+                    ps.setInt(1, film.getId());
+                    ps.setInt(2, genre.getId());
+                }
+        );
+        log.trace("Жанры фильма записаны");
     }
 
 }
