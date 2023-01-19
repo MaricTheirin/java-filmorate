@@ -45,7 +45,7 @@ public class FilmController extends FilmorateController<Film> {
 
     @PutMapping("{id}/like/{userId}")
     public void like(@PathVariable Integer id, @PathVariable Integer userId) {
-        filmService.like(filmService.get(id), userService.get(userId));
+        filmService.like(id, userId);
     }
 
     @Override
@@ -68,7 +68,12 @@ public class FilmController extends FilmorateController<Film> {
 
     @DeleteMapping("{id}/like/{userId}")
     public void dislike(@PathVariable Integer id, @PathVariable Integer userId) {
-        filmService.dislike(filmService.get(id), userService.get(userId));
+        filmService.dislike(id, userId);
+    }
+
+    @DeleteMapping("{id}")
+    public Film delete(@PathVariable Integer id) {
+        return filmService.remove(id);
     }
 
 }

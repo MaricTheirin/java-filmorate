@@ -1,13 +1,14 @@
 package ru.yandex.practicum.filmorate.model;
 
+import lombok.Builder;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 import javax.validation.constraints.*;
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.Set;
 
 @Data
+@Builder
 public class User {
 
     @PositiveOrZero
@@ -26,7 +27,7 @@ public class User {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     final LocalDate birthday;
 
-    final Set<Integer> friends = new HashSet<>();
+    Set<Integer> friends;
 
     public String getName() {
         if (name == null || name.isEmpty()) {

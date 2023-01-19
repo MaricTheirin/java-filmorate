@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.exception.hanlder;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
@@ -8,8 +9,11 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import ru.yandex.practicum.filmorate.exception.film.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.exception.film.FilmValidationException;
+import ru.yandex.practicum.filmorate.exception.genre.GenreNotFoundException;
+import ru.yandex.practicum.filmorate.exception.mpaRating.MpaRatingNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserNotFoundException;
 import ru.yandex.practicum.filmorate.exception.user.UserValidationException;
 
@@ -21,7 +25,12 @@ public class ExceptionDefaultAdvice {
 
     private static final String DEFAULT_EXCEPTION_DESCRIPTION = "Возникла ошибка при обработке запроса: ";
 
-    @ExceptionHandler({UserNotFoundException.class, FilmNotFoundException.class})
+    @ExceptionHandler({
+            UserNotFoundException.class,
+            FilmNotFoundException.class,
+            GenreNotFoundException.class,
+            MpaRatingNotFoundException.class
+    })
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Response handleNotFoundExceptions (Throwable e) {
         return new Response(DEFAULT_EXCEPTION_DESCRIPTION + e.getMessage());
@@ -41,6 +50,20 @@ public class ExceptionDefaultAdvice {
             sj.add("Поле [" + error.getField() + "] " + error.getDefaultMessage());
         }
         return new Response(DEFAULT_EXCEPTION_DESCRIPTION + sj);
+    }
+
+
+    @ExceptionHandler(DuplicateKeyException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Response handleDuplicateKeyExceptions (DuplicateKeyException e) {
+        return new Response(DEFAULT_EXCEPTION_DESCRIPTION + "нарушена уникальность при вставке объекта");
+    }
+
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Response handleMethodArgumentTypeMismatchExceptions (MethodArgumentTypeMismatchException e) {
+        return new Response(DEFAULT_EXCEPTION_DESCRIPTION + "неверно указаны параметры http-запроса");
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
